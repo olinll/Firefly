@@ -1,0 +1,24 @@
+/* 自定义鼠标样式 */
+:root {
+    --cursor-default: url('/mouse/default.cur'), default;
+    --cursor-pointer: url('/mouse/pointer.cur'), pointer;
+}
+
+/* 全局鼠标样式 */
+html, body {
+    cursor: var(--cursor-default);
+}
+
+/* 可点击元素的鼠标样式 */
+a, button, input[type="button"], input[type="submit"], input[type="reset"],
+[type="button"], [type="submit"], [type="reset"],
+button, select, label,
+[role="button"], [role="link"],
+.cursor-pointer {
+    cursor: var(--cursor-pointer);
+}
+
+/* 输入框等可编辑区域使用默认光标 */
+input, textarea, [contenteditable="true"] {
+    cursor: text;
+}
