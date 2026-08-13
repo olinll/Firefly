@@ -6,6 +6,7 @@ description: 一个简明的 Markdown 博客示例。
 tags: [Markdown, 文章示例]
 category: 文章示例
 licenseName: "未授权"
+image: api
 author: emn178
 sourceLink: "https://github.com/emn178/markdown"
 slug: markdown-tutorial

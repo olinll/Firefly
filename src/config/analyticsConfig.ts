@@ -2,25 +2,25 @@ import type { AnalyticsConfig } from "../types/analyticsConfig";
 
 export const analyticsConfig: AnalyticsConfig = {
 	// Google Analytics ID
-	googleAnalyticsId: "",
+	googleAnalyticsId: "G-9WNSE2GKXG",
 	// Microsoft Clarity ID
-	microsoftClarityId: "",
+	microsoftClarityId: "x5pg7oa5rr",
 	// Umami 统计配置
 	umamiAnalytics: {
 		// Umami Website ID
-		websiteId: "",
+		websiteId: "71de627e-31d7-4e39-b44a-ad899c628a5b",
 		// Umami JS地址，支持使用自建
-		scriptUrl: "https://cloud.umami.is/script.js",
+		scriptUrl: "https://umami.olinl.com/olinl_u.js",
 		// Umami 会话回放脚本地址，支持使用自建
-		replaysScriptUrl: "https://cloud.umami.is/recorder.js",
+		replaysScriptUrl: "https://umami.olinl.com/recorder.js",
 		// 是否追踪出站链接
 		trackOutboundLinks: true,
 		// 是否收集浏览器性能指标
-		collectWebVitals: false,
+		collectWebVitals: true,
 		// 会话回放配置
 		replays: {
 			// 是否启用会话回放
-			enabled: false,
+			enabled: true,
 			// 录制会话采样率，范围 0-1，例如 0.15 表示记录 15% 的会话
 			sampleRate: 0.15,
 			// 隐私遮罩级别："moderate" 会遮罩所有输入框；"strict" 额外遮罩页面全部文本

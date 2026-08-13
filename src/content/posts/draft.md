@@ -3,6 +3,7 @@ title: 草稿示例
 published: 1970-01-01
 tags: [Markdown, 博客, 演示]
 category: 文章示例
+image: api
 draft: true
 slug: draft
 ---
