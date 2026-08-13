@@ -83,7 +83,7 @@ export const siteConfig: SiteConfig = {
 		// 	alt: "🍀",
 		// },
 
-			logo: {
+		logo: {
 			type: "image",
 			value: "favicon/favicon-dark-192.png",
 			alt: "Olinl Blog Logo",

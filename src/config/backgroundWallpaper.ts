@@ -75,12 +75,12 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			// 是否启用主页横幅文字
 			enable: true,
 			// 主页横幅主标题
-				title: "Olinl Blog",
+			title: "Olinl Blog",
 			// 主页横幅主标题字体大小
 			titleSize: "4.5rem",
 			// 主页横幅副标题
 			subtitle: [
-					"如果真相有颜色，那一定是白色的",
+				"如果真相有颜色，那一定是白色的",
 				"日志滚到尽头，堆栈烙在最深处",
 				"当所有的红色报错逐一熄灭",
 				"终端里只剩下那片冷静的、无瑕的白",

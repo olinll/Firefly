@@ -8,7 +8,6 @@ export const announcementConfig: AnnouncementConfig = {
 	content:
 		"👋🏻 Hi，我是顾拾柒，欢迎来到我的博客！这里是分享知识、交流想法的地方。希望你能在这里找到有价值的内容！",
 
-
 	// 是否允许用户关闭公告
 	closable: true,
 
