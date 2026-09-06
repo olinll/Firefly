@@ -10,5 +10,11 @@
 		"language": "Astro",
 		"avatarUrl": "https://avatars.githubusercontent.com/u/25200299?v=4",
 		"license": "MIT"
+	},
+	"withastro/astro": {
+		"description": "The web framework for content-driven websites. ⭐️ Star to support our work!",
+		"language": "TypeScript",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/44914786?v=4",
+		"license": "NOASSERTION"
 	}
 }

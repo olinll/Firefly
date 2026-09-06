@@ -27,13 +27,13 @@ export const dynamicConfig: DynamicConfig = {
 	// Memos 记得配置 CORS，否则可能会出现跨域问题
 	memos: {
 		// 是否启用 Memos 数据源
-		enable: false,
+		enable: true,
 
 		// Memos 实例地址
-		apiUrl: "https://memos.example.com",
+		apiUrl: "https://note.olinl.com",
 
 		// Memos 用户标识，如 "users/你的memos用户名"，用于过滤指定用户的动态
 		// 注意：需与 Memos API 返回的 creator 字段完全一致（区分大小写），例如实际用户名为 admin 时应为 "users/admin"，而非"users/Admin"
-		parent: "users/xiaye",
+		parent: "",
 	},
 };
