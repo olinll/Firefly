@@ -1,25 +1,42 @@
 ---
+import { render } from "astro:content";
+import CoverImage from "@/components/common/CoverImage.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import { getSortedPostsList } from "@/utils/content-utils";
-import { getPostUrlBySlug, url } from "@/utils/url-utils";
+import { getSortedPosts } from "@/utils/content-utils";
+import { getApiUrlList, processCoverImageSync } from "@/utils/image-utils";
+import { getFileDirFromPath, getPostUrlBySlug, url } from "@/utils/url-utils";
 
 // 归档列表：全量按年分组，服务端渲染。筛选（?tag=/?category=/?uncategorized）
 // 与年份折叠由客户端脚本处理——数据本身在构建期已全部就绪。
-const sortedPostsList = await getSortedPostsList();
+const sortedPostsList = await getSortedPosts();
 
 // 严格按发布时间倒序（不受置顶影响），镜像原 Svelte 版行为
 const posts = sortedPostsList
 	.slice()
 	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
 
+// 归档封面：没有设置图片的文章统一使用配置中的随机图 API。
+const archivePosts = await Promise.all(
+	posts.map(async (post) => {
+		const { remarkPluginFrontmatter } = await render(post);
+		const image = post.data.image?.trim() || "api";
+		return {
+			post,
+			words: remarkPluginFrontmatter.words ?? 0,
+			cover: processCoverImageSync(image, post.id),
+			apiUrls: getApiUrlList(image, post.id),
+		};
+	}),
+);
+
 // 按年份分组
-const grouped = new Map<number, typeof posts>();
-for (const post of posts) {
-	const year = post.data.published.getFullYear();
+const grouped = new Map<number, typeof archivePosts>();
+for (const archivePost of archivePosts) {
+	const year = archivePost.post.data.published.getFullYear();
 	if (!grouped.has(year)) grouped.set(year, []);
-	grouped.get(year)?.push(post);
+	grouped.get(year)?.push(archivePost);
 }
 const groups = Array.from(grouped.entries())
 	.map(([year, yearPosts]) => ({ year, posts: yearPosts }))
@@ -76,23 +93,18 @@ const foldOnFilter = collapseAllButFirst;
     return (
       <div class="archive-year-block" data-year={group.year} data-count={group.posts.length}>
         <button
-          class="archive-year-toggle flex flex-row w-full items-center h-15 cursor-pointer rounded-lg
-                 hover:bg-(--btn-plain-bg-hover) transition-colors group/yr"
+          class="archive-year-toggle group/yr"
           aria-expanded={collapsed ? "false" : "true"}
         >
-          <div class="w-[15%] md:w-[10%] transition text-2xl font-bold text-right text-75
-                      group-hover/yr:text-(--primary)">
+          <div class="archive-year">
             {group.year}
           </div>
-          <div class="w-[15%] md:w-[10%]">
-            <div class="h-3 w-3 bg-none rounded-full outline-(--primary) mx-auto
-                        -outline-offset-2 z-50 outline-3"></div>
+          <div class="archive-year-marker">
+            <span></span>
           </div>
-          <div class="w-[70%] md:w-[80%] transition text-left text-50 flex items-center gap-2
-                      group-hover/yr:text-(--primary)">
-            <span class="archive-year-count">{group.posts.length}</span>
-            {" "}
-            <span class="archive-year-count-label">{i18n(group.posts.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}</span>
+          <div class="archive-year-info">
+            <span class="archive-year-words">{group.posts.reduce((sum, item) => sum + item.words, 0)} 字</span>
+            <span class="archive-year-count"><span class="archive-year-count-value">{group.posts.length}</span> <span class="archive-year-count-label">{i18n(group.posts.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}</span></span>
             <span class="archive-arrow" style={collapsed ? "transform: rotate(-90deg)" : ""}>
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                 <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
@@ -102,50 +114,40 @@ const foldOnFilter = collapseAllButFirst;
         </button>
 
         <div class="archive-year-content" hidden={collapsed}>
-          {group.posts.map((post) => (
+          {group.posts.map(({ post, cover, apiUrls }) => (
             <a
               href={getPostUrlBySlug(post.id)}
               aria-label={post.data.title}
-              class="archive-post group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
+              class="archive-post group"
               data-tags={JSON.stringify(post.data.tags || [])}
               data-category={post.data.category || ""}
             >
-              <div class="flex flex-row justify-start items-center h-full">
-                {/* date */}
-                <div class="w-[15%] md:w-[10%] transition text-sm text-right text-50">
-                  {formatDate(post.data.published)}
-                </div>
-
-                {/* dot and line */}
-                <div class="w-[15%] md:w-[10%] relative dash-line h-full flex items-center">
-                  <div class="transition-all mx-auto w-1 h-1 rounded-sm group-hover:h-5
-                              bg-[oklch(0.5_0.05_var(--hue))] group-hover:bg-(--primary)
-                              outline-4 z-50 outline-(--card-bg)
-                              group-hover:outline-(--btn-plain-bg-hover)
-                              group-active:outline-(--btn-plain-bg-active)"></div>
-                </div>
-
-                {/* post title */}
-                <div class="w-[70%] md:max-w-[65%] md:w-[65%] text-left font-bold
-                            group-hover:translate-x-1 transition-all group-hover:text-(--primary)
-                            text-75 pr-8 whitespace-nowrap text-ellipsis overflow-hidden flex items-center gap-2">
+              <time class="archive-post-date" datetime={post.data.published.toISOString()}>
+                {formatDate(post.data.published)}
+              </time>
+              <span class="archive-post-marker" aria-hidden="true"><span></span></span>
+              <div class="archive-post-link">
                   {post.data.category && (
-                    <span class="shrink-0 inline-block text-xs font-medium px-1.5 py-0.5 rounded-sm
-                                 bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))]
-                                 text-(--primary) group-hover:bg-(--primary) group-hover:text-white!
-                                 transition-colors">
+                    <span class="archive-post-category">
                       {post.data.category}
                     </span>
                   )}
-                  <span class="truncate">{post.data.title}</span>
-                </div>
-
-                {/* tag list */}
-                <div class="hidden md:block md:w-[15%] text-left text-sm transition
-                            whitespace-nowrap text-ellipsis overflow-hidden text-30">
-                  {formatTag(post.data.tags || [])}
-                </div>
+                  <span class="archive-post-title">{post.data.title}</span>
               </div>
+              <div class="archive-post-tags">
+                  {formatTag(post.data.tags || [])}
+              </div>
+              {cover && (
+                <CoverImage
+                  src={cover}
+                  basePath={getFileDirFromPath(post.filePath || "")}
+                  alt={post.data.title}
+                  class="archive-post-cover"
+                  preview={true}
+                  loading="lazy"
+                  apiUrls={apiUrls}
+                />
+              )}
             </a>
           ))}
         </div>
@@ -158,6 +160,279 @@ const foldOnFilter = collapseAllButFirst;
   archive-panel {
     display: block;
   }
+
+  .archive-year-block {
+    margin: 1rem 0 3rem;
+  }
+
+  .archive-year-toggle {
+    display: grid;
+    grid-template-columns: 15% 15% 70%;
+    align-items: center;
+    width: 100%;
+    min-height: 4rem;
+    cursor: pointer;
+    text-align: initial;
+    background: transparent;
+    transition: color 0.2s, background-color 0.2s;
+  }
+
+  .archive-year-toggle:hover,
+  .archive-year-toggle:focus-visible {
+    color: var(--primary);
+    background: var(--btn-plain-bg-hover);
+    outline: none;
+  }
+
+  .archive-year {
+    font-size: 1.5em;
+    font-weight: 700;
+    text-align: right;
+    color: var(--content-meta);
+  }
+
+  .archive-year-marker,
+  .archive-post-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .archive-year-marker span {
+    z-index: 1;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 3px solid var(--primary);
+    border-radius: 50%;
+    background: var(--card-bg);
+  }
+
+  .archive-year-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5em;
+    color: var(--content-meta);
+    font-size: 0.85em;
+  }
+
+  .archive-year-words,
+  .archive-year-count {
+    white-space: nowrap;
+  }
+
+  .archive-arrow {
+    display: inline-flex;
+    transition: transform 0.2s ease;
+  }
+
+  .archive-year-content {
+    position: relative;
+  }
+
+  .archive-post {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 2.5rem;
+    margin: 0.2em 0;
+    overflow: hidden;
+    color: var(--content-meta);
+    text-decoration: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .archive-post:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .archive-post-date {
+    display: inline-block;
+    flex: 0 0 15%;
+    font-family: var(--font-monospace);
+    font-size: 0.85em;
+    text-align: right;
+    color: var(--content-meta);
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+  }
+
+  .archive-post-marker {
+    flex: 0 0 15%;
+    min-height: 2.5rem;
+  }
+
+  .archive-post-marker::before {
+    position: absolute;
+    top: -50%;
+    left: calc(50% - 1px);
+    width: 0;
+    height: 150%;
+    border-left: 2px dashed var(--line-color);
+    content: "";
+  }
+
+  .archive-post-marker span {
+    z-index: 1;
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 0.1rem;
+    background: oklch(0.5 0.05 var(--hue));
+    outline: 4px solid var(--card-bg);
+    transition: height 0.2s ease, background-color 0.2s ease;
+  }
+
+  .archive-post-link {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    min-height: 2.5rem;
+    gap: 0.5em;
+    overflow: hidden;
+    padding: 0.3em 0.6em;
+    text-align: left;
+  }
+
+  .archive-post-title {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--content-meta) 90%, transparent);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .archive-post-category {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    padding: 0.125em 0.375em;
+    border-radius: 0.15rem;
+    background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+    color: var(--primary);
+    font-size: 0.75em;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .archive-post-tags {
+    position: relative;
+    z-index: 1;
+    display: none;
+    flex: 0 0 15%;
+    overflow: hidden;
+    color: var(--content-meta);
+    font-size: 0.85em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  :global(.archive-post-cover) {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    right: 0;
+    width: min(50%, 180px);
+    height: 2.5rem !important;
+    max-height: 2.5rem;
+    min-height: 0 !important;
+    margin: 0;
+    opacity: 0.8;
+    pointer-events: none;
+    border-radius: 0;
+    mask-image: linear-gradient(to right, transparent, rgb(255 255 255 / 47%));
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  :global(.archive-post-cover img) {
+    object-position: center;
+    transform: scale(1);
+    transition: transform 0.3s ease, object-position 0.3s ease;
+  }
+
+  .archive-post:hover .archive-post-title,
+  .archive-post:focus-visible .archive-post-title {
+    color: var(--primary);
+    transform: translateX(0.25rem);
+  }
+
+  .archive-post:hover :global(.archive-post-cover),
+  .archive-post:focus-visible :global(.archive-post-cover) {
+    width: 50%;
+    opacity: 1;
+    transform: scale(1.04);
+    transform-origin: right center;
+  }
+
+  .archive-post:hover :global(.archive-post-cover img),
+  .archive-post:focus-visible :global(.archive-post-cover img) {
+    object-position: center;
+    transform: scale(1.12);
+  }
+
+  .archive-post:hover .archive-post-date,
+  .archive-post:focus-visible .archive-post-date {
+    opacity: 1;
+  }
+
+  .archive-post:hover .archive-post-marker span,
+  .archive-post:focus-visible .archive-post-marker span {
+    height: 1.25rem;
+    background: var(--primary);
+  }
+
+  .archive-post:hover .archive-post-category,
+  .archive-post:focus-visible .archive-post-category {
+    background: var(--primary);
+    color: white;
+  }
+
+  @media (min-width: 768px) {
+    .archive-year-toggle {
+      grid-template-columns: 10% 10% 80%;
+    }
+
+    .archive-post-date,
+    .archive-post-marker {
+      flex-basis: 10%;
+    }
+
+    .archive-post-tags {
+      display: block;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .archive-year-info {
+      justify-content: flex-start;
+    }
+
+    .archive-post {
+      font-size: 0.9em;
+    }
+
+    .archive-post-date,
+    .archive-post-marker {
+      flex-basis: 15%;
+    }
+
+    .archive-post-tags {
+      display: none;
+    }
+
+    :global(.archive-post-cover) {
+      width: 7rem;
+    }
+  }
+
   .archive-arrow {
     display: inline-flex;
   }
@@ -225,7 +500,7 @@ const foldOnFilter = collapseAllButFirst;
         }
 
         // 更新每年计数显示
-        const countEl = block.querySelector(".archive-year-count");
+        const countEl = block.querySelector(".archive-year-count-value");
         const labelEl = block.querySelector(".archive-year-count-label");
         if (countEl) countEl.textContent = String(visibleCount);
         if (labelEl) {

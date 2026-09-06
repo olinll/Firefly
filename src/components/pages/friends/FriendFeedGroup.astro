@@ -1,0 +1,185 @@
+---
+import type { FriendFeedGroup as FriendFeedGroupData } from "@/types/friendsFeed";
+import FriendFeedCard from "./FriendFeedCard.astro";
+
+interface Props {
+	group: FriendFeedGroupData;
+}
+
+const { group } = Astro.props;
+---
+
+<section class="friend-feed-group">
+	<h2 class="friend-feed-title">{group.name}</h2>
+	{group.desc && <p class="friend-feed-desc">{group.desc}</p>}
+	<ul class="friend-feed-list">
+		{group.entries.map((entry) => <FriendFeedCard entry={entry} />)}
+	</ul>
+</section>
+
+<script>
+	const initFriendFeedTooltips = () => {
+		if (document.documentElement.dataset.friendFeedTooltipInit) return;
+		document.documentElement.dataset.friendFeedTooltipInit = "true";
+
+		const tooltip = document.createElement("div");
+		tooltip.id = "friend-feed-tooltip";
+		tooltip.className = "friend-feed-tooltip";
+		tooltip.setAttribute("role", "tooltip");
+		document.body.appendChild(tooltip);
+
+		let activeCard: HTMLElement | null = null;
+		let openTimer: ReturnType<typeof setTimeout> | undefined;
+		let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+		const hideTooltip = () => {
+			if (openTimer) clearTimeout(openTimer);
+			if (closeTimer) clearTimeout(closeTimer);
+			activeCard = null;
+			tooltip.classList.remove("is-visible");
+		};
+
+		const bindFallbackImages = (root: ParentNode) => {
+			const handleImageFailure = (image: HTMLImageElement) => {
+				image.style.display = "none";
+				image.nextElementSibling?.removeAttribute("hidden");
+			};
+
+			root.querySelectorAll<HTMLImageElement>("img[data-friend-image]").forEach((image) => {
+				if (image.dataset.fallbackBound) return;
+				image.dataset.fallbackBound = "true";
+				image.addEventListener("error", () => handleImageFailure(image), { once: true });
+				const syncImageFailure = () => {
+					if (image.complete && image.naturalWidth === 0) handleImageFailure(image);
+				};
+				syncImageFailure();
+				let syncAttempts = 0;
+				const syncTimer = window.setInterval(() => {
+					syncAttempts += 1;
+					syncImageFailure();
+					if (image.complete || syncAttempts >= 50) window.clearInterval(syncTimer);
+				}, 100);
+			});
+		};
+
+		const syncBrokenImages = () => {
+			document.querySelectorAll<HTMLImageElement>("img[data-friend-image]").forEach((image) => {
+				if (image.complete && image.naturalWidth === 0) {
+					image.style.display = "none";
+					image.nextElementSibling?.removeAttribute("hidden");
+				}
+			});
+		};
+
+		const bindOuterAvatarImages = (root: ParentNode) => {
+			root.querySelectorAll<HTMLImageElement>(".friend-feed-avatar img[data-friend-image]").forEach((image) => {
+				const markLoaded = () => {
+					if (image.naturalWidth > 0) image.classList.add("is-loaded");
+				};
+				image.addEventListener("load", markLoaded, { once: true });
+				markLoaded();
+			});
+		};
+
+		const scheduleHide = () => {
+			if (closeTimer) clearTimeout(closeTimer);
+			closeTimer = setTimeout(hideTooltip, 80);
+		};
+
+		const showTooltip = (card: HTMLElement, source: HTMLElement) => {
+			activeCard = card;
+			tooltip.innerHTML = source.innerHTML;
+			tooltip.classList.remove("is-visible");
+			tooltip.style.visibility = "hidden";
+			tooltip.style.left = "0px";
+			tooltip.style.top = "0px";
+			tooltip.style.maxWidth = `${Math.max(160, window.innerWidth - 24)}px`;
+			tooltip.querySelectorAll<HTMLElement>("[data-fallback-bound]").forEach((image) => {
+				image.removeAttribute("data-fallback-bound");
+			});
+			bindFallbackImages(tooltip);
+
+			const cardRect = card.getBoundingClientRect();
+			const gap = 12;
+			const viewportPadding = 12;
+			const tooltipWidth = Math.min(tooltip.offsetWidth || 320, window.innerWidth - viewportPadding * 2);
+			const tooltipHeight = tooltip.offsetHeight;
+			const left = Math.max(
+				viewportPadding,
+				Math.min(
+					cardRect.left + cardRect.width / 2 - tooltipWidth / 2,
+					window.innerWidth - tooltipWidth - viewportPadding,
+				),
+			);
+			const above = cardRect.top - tooltipHeight - gap;
+			const top = above >= viewportPadding
+				? above
+				: Math.min(cardRect.bottom + gap, window.innerHeight - tooltipHeight - viewportPadding);
+
+			tooltip.style.left = `${left}px`;
+			tooltip.style.top = `${Math.max(viewportPadding, top)}px`;
+			tooltip.style.visibility = "visible";
+			tooltip.classList.add("is-visible");
+		};
+
+		const bindCards = () => {
+				document.querySelectorAll<HTMLElement>(".friend-feed-card").forEach((card) => {
+				if (card.dataset.tooltipBound) return;
+				card.dataset.tooltipBound = "true";
+				const source = card.parentElement?.querySelector<HTMLElement>(".friend-feed-tooltip-source");
+				if (!source) return;
+				bindFallbackImages(card);
+				bindOuterAvatarImages(card);
+				bindFallbackImages(source);
+				card.addEventListener("mouseenter", () => {
+					if (closeTimer) clearTimeout(closeTimer);
+					if (openTimer) clearTimeout(openTimer);
+					openTimer = setTimeout(() => showTooltip(card, source), 200);
+				});
+				card.addEventListener("mouseleave", (event) => {
+					if (event.relatedTarget !== tooltip && !tooltip.contains(event.relatedTarget as Node | null)) scheduleHide();
+				});
+				card.addEventListener("focus", () => {
+					if (closeTimer) clearTimeout(closeTimer);
+					if (openTimer) clearTimeout(openTimer);
+					openTimer = setTimeout(() => showTooltip(card, source), 200);
+				});
+				card.addEventListener("blur", (event) => {
+					if (event.relatedTarget !== tooltip && !tooltip.contains(event.relatedTarget as Node | null)) scheduleHide();
+				});
+				});
+			syncBrokenImages();
+		};
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", bindCards, { once: true });
+		} else {
+			requestAnimationFrame(bindCards);
+		}
+		const brokenImageSyncTimer = window.setInterval(syncBrokenImages, 100);
+		window.setTimeout(() => window.clearInterval(brokenImageSyncTimer), 5000);
+		document.addEventListener("astro:page-load", bindCards);
+		tooltip.addEventListener("mouseenter", () => {
+			if (closeTimer) clearTimeout(closeTimer);
+		});
+		tooltip.addEventListener("mouseleave", scheduleHide);
+
+		window.addEventListener("resize", () => {
+			if (activeCard) {
+				const source = activeCard.parentElement?.querySelector<HTMLElement>(".friend-feed-tooltip-source");
+				if (source) showTooltip(activeCard, source);
+			}
+		});
+		window.addEventListener("scroll", () => {
+			if (activeCard) {
+				const source = activeCard.parentElement?.querySelector<HTMLElement>(".friend-feed-tooltip-source");
+				if (source) showTooltip(activeCard, source);
+			}
+		}, { passive: true });
+		document.addEventListener("astro:before-swap", () => {
+			hideTooltip();
+		});
+	};
+
+	initFriendFeedTooltips();
+</script>

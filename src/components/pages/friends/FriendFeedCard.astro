@@ -1,0 +1,69 @@
+---
+import { Icon } from "astro-icon/components";
+import type { FriendFeedEntry } from "@/types/friendsFeed";
+
+interface Props {
+	entry: FriendFeedEntry;
+}
+
+const { entry } = Astro.props;
+const title = entry.title || entry.sitenick || entry.author;
+const initial = (entry.author || title).trim().charAt(0).toUpperCase();
+let domain = entry.link;
+try {
+	domain = new URL(entry.link).hostname;
+} catch {
+	// Keep the original value when the link is not a valid URL.
+}
+---
+
+<li class="friend-feed-item" style={`--delay: ${entry.link.length % 10}0ms`}>
+	<a
+		class="friend-feed-card"
+		href={entry.link}
+		target="_blank"
+		rel="noopener noreferrer"
+		aria-label={`${entry.author}：${title}`}
+	>
+		<span class="friend-feed-avatar">
+			{entry.avatar ? (
+				<img
+					src={entry.avatar}
+					alt={entry.author}
+					loading="lazy"
+					decoding="async"
+					data-friend-image
+				/>
+			) : null}
+			<span class="friend-feed-avatar-fallback" aria-hidden="true">{initial}</span>
+		</span>
+		<span class="friend-feed-author">{entry.author}</span>
+		{entry.sitenick && <span class="friend-feed-nick">{entry.sitenick}</span>}
+	</a>
+
+	<div class="friend-feed-tooltip-source" hidden>
+		<div class="friend-feed-tooltip-header">
+			{entry.icon ? (
+				<img
+					src={entry.icon}
+					alt=""
+					loading="lazy"
+					decoding="async"
+					data-friend-image
+				/>
+			) : null}
+			<span class="friend-feed-tooltip-icon-fallback" hidden={Boolean(entry.icon)} aria-hidden="true">{initial}</span>
+			<div class="friend-feed-tooltip-site">
+				<strong>{title}</strong>
+				<code>{domain}</code>
+			</div>
+			{entry.archs?.map((arch) => <span class="friend-feed-arch">{arch}</span>)}
+		</div>
+		<div class="friend-feed-tooltip-body">
+			<span class="friend-feed-date">{entry.date}</span>
+			<p>{entry.desc || entry.author}</p>
+			{entry.comment && <p class="friend-feed-comment"><Icon name="material-symbols:chat-bubble-outline-rounded" />{entry.comment}</p>}
+			{entry.feed && <a class="friend-feed-rss" href={entry.feed} target="_blank" rel="noopener noreferrer"><Icon name="material-symbols:rss-feed-rounded" /> RSS / Atom</a>}
+		</div>
+	</div>
+</li>

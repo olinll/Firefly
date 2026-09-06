@@ -4,6 +4,13 @@ export type FriendLink = {
 	imgurl: string; // 头像图片URL
 	desc: string; // 友链描述
 	siteurl: string; // 友链地址
+	feed?: string; // RSS / Atom 订阅源
+	icon?: string; // 站点图标
+	author?: string; // 博主名称
+	sitenick?: string; // 网站趣称
+	archs?: string[]; // 网站技术栈
+	date?: string; // 收录日期
+	comment?: string; // 博主备注
 	tags?: string[]; // 标签数组
 	weight: number; // 权重，数字越大排序越靠前
 	enabled: boolean; // 是否启用

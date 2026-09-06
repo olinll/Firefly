@@ -1,5 +1,6 @@
 ---
 import Navbar from "@components/layout/Navbar.astro";
+import SiteRebuildNotice from "@components/layout/SiteRebuildNotice.astro";
 import type { NavbarMode } from "@/types/siteConfig";
 
 interface Props {
@@ -29,4 +30,5 @@ const isFixedNavbar = navbarMode !== "static";
     >
         <Navbar></Navbar>
     </div>
+	<SiteRebuildNotice />
 </div>

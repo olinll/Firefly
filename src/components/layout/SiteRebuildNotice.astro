@@ -1,0 +1,104 @@
+---
+const destination = "https://nuxt.olinl.com";
+---
+
+<div id="site-rebuild-notice" class="site-rebuild-notice" role="status">
+	<div class="site-rebuild-notice-content">
+		<span aria-hidden="true">📢</span>
+		<span>本站正在重建中，文章内容已迁移至 Nuxt 站点。</span>
+		<a href={destination} target="_blank" rel="noopener noreferrer">前往阅读</a>
+	</div>
+	<button id="site-rebuild-notice-close" type="button" aria-label="关闭通知">×</button>
+</div>
+
+<script>
+	const notice = document.getElementById("site-rebuild-notice");
+	const closeButton = document.getElementById("site-rebuild-notice-close");
+	const dismissedKey = "firefly-site-rebuild-notice-dismissed";
+
+	if (notice && window.localStorage.getItem(dismissedKey) === "true") {
+		notice.hidden = true;
+	}
+
+	closeButton?.addEventListener("click", () => {
+		if (!notice) return;
+		notice.hidden = true;
+		window.localStorage.setItem(dismissedKey, "true");
+	});
+</script>
+
+<style>
+	.site-rebuild-notice {
+		position: absolute;
+		top: calc(100% + 0.5rem);
+		left: 50%;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		width: min(calc(100vw - 2rem), 48rem);
+		padding: 0.55rem 0.65rem 0.55rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+		border-radius: 0.75rem;
+		background: color-mix(in srgb, var(--card-bg) 94%, var(--primary));
+		box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 10%);
+		color: var(--content-meta);
+		font-size: 0.9rem;
+		transform: translateX(-50%);
+		transition: opacity 0.2s ease, transform 0.2s ease;
+	}
+
+	.site-rebuild-notice[hidden] {
+		display: none;
+	}
+
+	.site-rebuild-notice-content {
+		display: flex;
+		min-width: 0;
+		align-items: center;
+		gap: 0.45rem;
+	}
+
+	.site-rebuild-notice-content > span:nth-child(2) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.site-rebuild-notice a {
+		flex: 0 0 auto;
+		color: var(--primary);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.site-rebuild-notice a:hover {
+		text-decoration: underline;
+	}
+
+	#site-rebuild-notice-close {
+		flex: 0 0 auto;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 0;
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+		color: var(--content-meta);
+		font-size: 1.25rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	#site-rebuild-notice-close:hover {
+		background: var(--primary);
+		color: white;
+	}
+
+	@media (max-width: 640px) {
+		.site-rebuild-notice {
+			gap: 0.5rem;
+			font-size: 0.8rem;
+		}
+	}
+</style>
