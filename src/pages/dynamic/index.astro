@@ -1,5 +1,7 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
+import DynamicCover from "@/components/pages/dynamic/DynamicCover.astro";
 import DynamicFeed from "@/components/pages/dynamic/DynamicFeed.svelte";
 import DynamicItemTemplate from "@/components/pages/dynamic/DynamicItemTemplate.astro";
 import { commentConfig, dynamicConfig, siteConfig } from "@/config";
@@ -26,11 +28,35 @@ const dataUrl = dynamicConfig.apiUrl?.startsWith("http")
 	? dynamicConfig.apiUrl
 	: url(dynamicConfig.apiUrl || "/api/dynamic.json");
 const memos = dynamicConfig.memos;
+let dynamicCount = 0;
+
+if (memos?.enable && memos.apiUrl) {
+	try {
+		const response = await fetch(`${memos.apiUrl}/api/v1/memos?pageSize=1000`);
+		if (response.ok) {
+			const data = (await response.json()) as {
+				memos?: Array<{ state?: string }>;
+			};
+			dynamicCount = (data.memos || []).filter(
+				(memo) => memo.state === "NORMAL",
+			).length;
+		}
+	} catch {
+		// The client-side feed remains available if the build-time count request fails.
+	}
+}
+
+if (!dynamicCount && !memos?.enable) {
+	dynamicCount = (await getCollection("dynamic")).length;
+}
 ---
 
 <MainGridLayout title={title} description={description}>
 	<section class="dynamic-page" aria-labelledby="dynamic-page-title">
 		<div>
+			{dynamicConfig.cover?.enable ? (
+				<DynamicCover title={title} description={description} {dynamicCount} />
+			) : (
 			<header class="dynamic-page-header card-base">
 				<div class="dynamic-page-heading">
 					<div class="dynamic-page-icon" aria-hidden="true">
@@ -46,7 +72,7 @@ const memos = dynamicConfig.memos;
 					aria-label={i18n(I18nKey.dynamic)}
 				>
 					<Icon name="material-symbols:dynamic-feed-rounded" />
-					<strong data-dynamic-page-count>0</strong>
+					<strong data-dynamic-page-count>{dynamicCount}</strong>
 					<span>{i18n(I18nKey.dynamic)}</span>
 				</div>
 				<div class="dynamic-filter">
@@ -67,6 +93,7 @@ const memos = dynamicConfig.memos;
 					</label>
 				</div>
 			</header>
+			)}
 
 			<DynamicFeed
 				client:load

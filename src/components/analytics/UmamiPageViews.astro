@@ -1,0 +1,211 @@
+---
+import { Icon } from "astro-icon/components";
+import { analyticsConfig } from "@/config";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+
+interface Props {
+	path: string;
+	className?: string;
+	variant?: "meta" | "badge" | "cover";
+}
+
+const { path, className = "", variant = "meta" } = Astro.props;
+const umamiConfig = analyticsConfig.umamiAnalytics;
+const shareId = umamiConfig?.shareId || "";
+const apiBase =
+	umamiConfig?.shareApiBase ||
+	(umamiConfig?.scriptUrl ? new URL(umamiConfig.scriptUrl).origin : "");
+---
+
+{
+	shareId && apiBase && (
+		<div
+			class:list={[
+				"umami-page-views flex items-center",
+				variant === "badge"
+					? "gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100/60 dark:bg-neutral-800/50 text-xs transition"
+					: "",
+				variant === "meta" ? "gap-1" : "",
+				variant === "cover" ? "cover-pv-badge" : "",
+				className,
+			]}
+			data-umami-pv-path={path}
+			data-umami-share-id={shareId}
+			data-umami-api-base={apiBase}
+		>
+			<Icon
+				name="material-symbols:visibility-outline-rounded"
+				class={variant === "badge" ? "text-(--primary) text-base" : "text-xl"}
+			/>
+				<span class={variant === "badge" ? "font-bold text-neutral-900 dark:text-neutral-100 whitespace-nowrap" : variant === "cover" ? "" : "text-50 text-sm font-medium mr-1"}>
+				{i18n(I18nKey.pageViews)}
+			</span>
+			<span
+				class={variant === "badge" ? "font-bold text-neutral-900 dark:text-neutral-100 whitespace-nowrap" : variant === "cover" ? "" : "text-50 text-sm font-medium"}
+				data-umami-pv-value
+			>
+				{i18n(I18nKey.pageViewsLoading)}
+			</span>
+		</div>
+	)
+}
+
+<script>
+	const viewWindow = window as typeof window & {
+		__fireflyUmamiPageViewsReady?: boolean;
+	};
+
+	if (!viewWindow.__fireflyUmamiPageViewsReady) {
+		viewWindow.__fireflyUmamiPageViewsReady = true;
+
+		const SHARE_CACHE_KEY = "umami-profile-share";
+		const SHARE_CACHE_TTL = 24 * 60 * 60 * 1000;
+		const METRICS_CACHE_KEY = "umami-pv-metrics";
+		const METRICS_CACHE_TTL = 5 * 60 * 1000;
+		const REQUEST_TIMEOUT = 8000;
+
+		type ShareResponse = { token: string; websiteId: string };
+		type MetricRow = { x: string; y: number };
+
+		function readCache<T>(key: string, ttl: number, tag: string): T | null {
+			const raw = localStorage.getItem(key);
+			if (!raw) return null;
+			try {
+				const parsed = JSON.parse(raw);
+				if (
+					parsed &&
+					parsed.tag === tag &&
+					Date.now() - parsed.timestamp < ttl
+				) {
+					return parsed.value as T;
+				}
+			} catch {
+				// Ignore malformed local cache and fetch fresh data.
+			}
+			localStorage.removeItem(key);
+			return null;
+		}
+
+		function writeCache(key: string, tag: string, value: unknown) {
+			try {
+				localStorage.setItem(
+					key,
+					JSON.stringify({ timestamp: Date.now(), tag, value }),
+				);
+			} catch {
+				// Storage can be unavailable in private browsing; the page still works.
+			}
+		}
+
+		async function fetchWithTimeout(
+			input: RequestInfo | URL,
+			init: RequestInit = {},
+		): Promise<Response> {
+			const controller = new AbortController();
+			const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+			try {
+				return await fetch(input, { ...init, signal: controller.signal });
+			} finally {
+				window.clearTimeout(timeout);
+			}
+		}
+
+		async function getShare(
+			apiBase: string,
+			shareId: string,
+		): Promise<ShareResponse> {
+			const cached = readCache<ShareResponse>(
+				SHARE_CACHE_KEY,
+				SHARE_CACHE_TTL,
+				shareId,
+			);
+			if (cached) return cached;
+			const response = await fetchWithTimeout(`${apiBase}/api/share/${shareId}`);
+			if (!response.ok) throw new Error(`share ${response.status}`);
+			const share = (await response.json()) as ShareResponse;
+			writeCache(SHARE_CACHE_KEY, shareId, share);
+			return share;
+		}
+
+		async function getMetrics(
+			apiBase: string,
+			share: ShareResponse,
+		): Promise<MetricRow[]> {
+			const cached = readCache<MetricRow[]>(
+				METRICS_CACHE_KEY,
+				METRICS_CACHE_TTL,
+				share.websiteId,
+			);
+			if (cached) return cached;
+			const response = await fetchWithTimeout(
+				`${apiBase}/api/websites/${share.websiteId}/metrics?startAt=0&endAt=${Date.now()}&type=path&limit=1000`,
+				{
+					headers: {
+					"x-umami-share-token": share.token,
+					"x-umami-share-context": "1",
+				},
+				},
+			);
+			if (!response.ok) throw new Error(`metrics ${response.status}`);
+			const metrics = (await response.json()) as MetricRow[];
+			writeCache(METRICS_CACHE_KEY, share.websiteId, metrics);
+			return metrics;
+		}
+
+		function normalize(path: string): string {
+			return path.replace(/\/+$/, "").toLowerCase();
+		}
+
+		function buildLookup(rows: MetricRow[]): Map<string, number> {
+			const lookup = new Map<string, number>();
+			for (const row of rows) {
+				const key = normalize(row.x);
+				lookup.set(key, (lookup.get(key) || 0) + (row.y || 0));
+			}
+			return lookup;
+		}
+
+		async function fillPageViews() {
+			const nodes = document.querySelectorAll<HTMLElement>(
+				"[data-umami-pv-path]",
+			);
+			if (nodes.length === 0) return;
+
+			const first = nodes[0];
+			const shareId = first.dataset.umamiShareId;
+			const apiBase = (first.dataset.umamiApiBase || "").replace(/\/$/, "");
+			if (!shareId || !apiBase) return;
+
+			try {
+				const share = await getShare(apiBase, shareId);
+				const lookup = buildLookup(await getMetrics(apiBase, share));
+				for (const node of nodes) {
+					const value = node.querySelector<HTMLElement>(
+						"[data-umami-pv-value]",
+					);
+					if (value) {
+						value.textContent = String(
+							lookup.get(normalize(node.dataset.umamiPvPath || "")) ?? 0,
+						).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+					}
+				}
+			} catch {
+				for (const node of nodes) {
+					const value = node.querySelector<HTMLElement>(
+						"[data-umami-pv-value]",
+					);
+					if (value) value.textContent = "—";
+				}
+			}
+		}
+
+		function run() {
+			requestAnimationFrame(fillPageViews);
+		}
+
+		run();
+		document.addEventListener("swup:contentReplaced", run);
+		document.addEventListener("astro:page-load", run);
+	}
+</script>

@@ -1,0 +1,32 @@
+/* 与 firefly-blog 一致的自定义鼠标样式 */
+:root {
+	--cursor-default: url("/mouse/default.cur"), default;
+	--cursor-pointer: url("/mouse/pointer.cur"), pointer;
+}
+
+html,
+body {
+	cursor: var(--cursor-default);
+}
+
+a,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+select,
+label,
+[role="button"],
+[role="link"],
+.cursor-pointer {
+	cursor: var(--cursor-pointer);
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+	cursor: text;
+}

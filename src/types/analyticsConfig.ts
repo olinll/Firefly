@@ -5,6 +5,8 @@ export type AnalyticsConfig = {
 		websiteId?: string; // Umami Website ID
 		scriptUrl?: string; // Umami JS地址，支持使用自建
 		replaysScriptUrl?: string; // Umami 会话回放脚本地址
+		shareId?: string; // Umami 公开分享 ID，用于前端获取浏览统计数据
+		shareApiBase?: string; // Umami API 基础地址，默认从 scriptUrl 推导
 		trackOutboundLinks?: boolean; // 是否追踪出站链接点击事件，默认 true
 		collectWebVitals?: boolean; // 是否自动收集访客浏览器核心网页指标，默认 false
 		replays?: {

@@ -3,6 +3,12 @@ export type DynamicConfig = {
 	description?: string;
 	/** 动态头像和名称的跳转地址，支持站内路径或完整 URL */
 	profileUrl?: string;
+	/** 动态页封面配置 */
+	cover?: {
+		enable: boolean;
+		image: string;
+		greeting?: string;
+	};
 	showComment?: boolean;
 	itemsPerPage?: number;
 	// 动态数据 json 地址，本地默认 "/api/dynamic.json"

@@ -1,6 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
-import { commentConfig } from "@/config";
+import UmamiPageViews from "@/components/analytics/UmamiPageViews.astro";
+import { analyticsConfig, commentConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
@@ -29,6 +30,7 @@ export interface Props {
 	showWords?: boolean;
 	showReadingTime?: boolean;
 	variant?: "default" | "cover";
+	showUmamiViews?: boolean;
 }
 
 const {
@@ -54,9 +56,11 @@ const {
 	showReadingTime = false,
 	password,
 	variant = "default",
+	showUmamiViews = false,
 } = Astro.props;
 
 const path = customPath || (id ? `/posts/${id}` : "");
+const hasUmamiPageViews = Boolean(analyticsConfig.umamiAnalytics?.shareId);
 const visibleTags =
 	typeof maxTags === "number" ? tags?.slice(0, maxTags) : tags;
 ---
@@ -179,11 +183,12 @@ const visibleTags =
     )
   }
 
-  {
-    !isHome &&
-      commentConfig.type === "twikoo" &&
-      commentConfig.twikoo?.visitorCount &&
-      id && (
+	{
+		!hasUmamiPageViews &&
+		!isHome &&
+		commentConfig.type === "twikoo" &&
+		commentConfig.twikoo?.visitorCount &&
+		id && (
         <div class="flex items-center">
           <div class="meta-icon">
             <Icon
@@ -199,10 +204,15 @@ const visibleTags =
           </span>
         </div>
       )
-  }
+	}
+
+	{(showUmamiViews || hasUmamiPageViews) && id && (
+		<UmamiPageViews path={path} variant="meta" />
+	)}
 
   {
-    !isHome &&
+		!hasUmamiPageViews &&
+		!isHome &&
       commentConfig.type === "waline" &&
       commentConfig.waline?.visitorCount &&
       id && (
@@ -227,7 +237,8 @@ const visibleTags =
   }
 
   {
-    !isHome &&
+		!hasUmamiPageViews &&
+		!isHome &&
       commentConfig.type === "artalk" &&
       commentConfig.artalk?.visitorCount &&
       id && (

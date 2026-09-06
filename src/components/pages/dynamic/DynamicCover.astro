@@ -1,0 +1,116 @@
+---
+import { Icon } from "astro-icon/components";
+import UmamiPageViews from "@/components/analytics/UmamiPageViews.astro";
+import { dynamicConfig, profileConfig } from "@/config";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+
+interface Props {
+	class?: string;
+	title: string;
+	description?: string;
+	dynamicCount: number;
+}
+
+const { class: className = "", title, description, dynamicCount } = Astro.props;
+
+const avatar = profileConfig.avatar || "/avatar.png";
+const name = profileConfig.name || "";
+const bio = Array.isArray(profileConfig.bio)
+	? profileConfig.bio[1] || profileConfig.bio[0] || ""
+	: profileConfig.bio || "";
+---
+
+<div class:list={["dynamic-cover", className]}>
+	<div class="dynamic-cover-img-box">
+		<img src={dynamicConfig.cover!.image} alt="封面" class="dynamic-cover-img" loading="eager" />
+		<div class="dynamic-cover-overlay"></div>
+
+		<div class="cover-row-top">
+			<div class="cover-title-area">
+				<h2 id="dynamic-page-title" class="cover-title">{title}</h2>
+				{description && <p class="cover-desc">{description}</p>}
+			</div>
+			<div class="cover-top-right">
+				<UmamiPageViews path="/dynamic/" variant="cover" />
+				<div class="cover-pv-badge">
+					<Icon is:inline name="material-symbols:dynamic-feed-rounded" />
+					<strong>{dynamicCount}</strong>
+					<span>{i18n(I18nKey.dynamic)}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="cover-row-bottom">
+			<div class="cover-filter-group">
+				<label class="cover-search">
+					<Icon is:inline name="material-symbols:search-rounded" />
+					<input type="search" data-dynamic-search placeholder={i18n(I18nKey.dynamicSearch)} />
+				</label>
+				<label class="cover-year-select">
+					<Icon is:inline name="material-symbols:calendar-month-rounded" />
+					<select data-year-select aria-label={i18n(I18nKey.year)}>
+						<option value="all">{i18n(I18nKey.dynamicAllYears)}</option>
+					</select>
+					<Icon is:inline name="material-symbols:arrow-drop-down-rounded" />
+				</label>
+			</div>
+		</div>
+
+		{dynamicConfig.cover?.greeting && <div class="cover-name">{name}</div>}
+	</div>
+
+	<div class="dynamic-cover-avatar-box">
+		<img src={avatar} alt={name} class="dynamic-cover-avatar" loading="eager" />
+	</div>
+	<div class="dynamic-cover-info">
+		{bio && <div class="dynamic-cover-bio">{bio}</div>}
+	</div>
+</div>
+
+<style>
+	.dynamic-cover { margin-bottom: 0.75rem; border-radius: 12px; overflow: visible; position: relative; }
+	.dynamic-cover-img-box { position: relative; width: 100%; height: 280px; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column; }
+	.dynamic-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.6s ease; }
+	.dynamic-cover:hover .dynamic-cover-img { transform: scale(1.02); }
+	.dynamic-cover-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.12) 40%, rgba(0, 0, 0, 0.5) 100%); z-index: 1; pointer-events: none; }
+	.cover-row-top { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem 0; }
+	.cover-title-area { flex: 1; min-width: 0; }
+	.cover-title { margin: 0; font-size: 1.65rem; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); line-height: 1.3; }
+	.cover-desc { margin: 0.25rem 0 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+	.cover-top-right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+	.cover-pv-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px); font-size: 0.78rem; color: #fff; white-space: nowrap; flex-shrink: 0; }
+	.cover-pv-badge svg { font-size: 1rem; }
+	.cover-pv-badge span:last-child { opacity: 0.8; }
+	.cover-row-bottom { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1.5rem 1rem; margin-top: auto; }
+	.cover-filter-group { display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0; }
+	.cover-search { position: relative; display: block; flex: 1; min-width: 0; max-width: 20rem; }
+	.cover-search svg { position: absolute; top: 50%; left: 0.75rem; color: rgba(255, 255, 255, 0.7); font-size: 1.15rem; pointer-events: none; transform: translateY(-50%); }
+	.cover-search input { width: 100%; min-height: 2.5rem; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9999px; outline: none; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); color: #fff; padding: 0.5rem 1rem 0.5rem 2.5rem; font-size: 0.875rem; transition: border-color 0.2s, background 0.2s; }
+	.cover-search input::placeholder { color: rgba(255, 255, 255, 0.55); }
+	.cover-search input:focus { border-color: rgba(255, 255, 255, 0.6); background: rgba(0, 0, 0, 0.45); }
+	.cover-year-select { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+	.cover-year-select svg:first-child { position: absolute; left: 0.75rem; font-size: 1.1rem; color: rgba(255, 255, 255, 0.7); pointer-events: none; z-index: 3; }
+	.cover-year-select svg:last-child { position: absolute; right: 0.75rem; font-size: 1.15rem; color: rgba(255, 255, 255, 0.7); pointer-events: none; }
+	.cover-year-select select { min-width: 8.5rem; min-height: 2.5rem; appearance: none; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9999px; outline: none; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); color: #fff; padding: 0.5rem 2.25rem; font-size: 0.85rem; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+	.cover-year-select select option { background: #222; color: #fff; }
+	.cover-year-select select:focus { border-color: rgba(255, 255, 255, 0.6); background: rgba(0, 0, 0, 0.45); }
+	.cover-name { position: absolute; right: 1.5rem; bottom: 2.75rem; z-index: 3; font-size: 1.25rem; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); white-space: nowrap; }
+	.dynamic-cover-avatar-box { position: absolute; right: 1.25rem; top: 280px; transform: translateY(-50%); z-index: 10; line-height: 0; }
+	.dynamic-cover-avatar { width: 4.5rem; height: 4.5rem; border-radius: 8px; object-fit: cover; border: 3px solid var(--card-bg); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25); display: block; }
+	.dynamic-cover-info { background: var(--card-bg); border: none; border-radius: 0 0 12px 12px; padding: 0.5rem 1.25rem 0.625rem; min-height: 2.5rem; display: flex; align-items: flex-end; justify-content: flex-end; }
+	.dynamic-cover-bio { font-size: 0.8125rem; color: var(--content-meta); line-height: 1.5; text-align: right; margin-right: 5rem; margin-bottom: 0.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	@media (max-width: 640px) {
+		.dynamic-cover-img-box { height: 240px; }
+		.cover-row-top { padding: 1rem 1.125rem 0; flex-direction: column; gap: 0.5rem; }
+		.cover-title { font-size: 1.35rem; }
+		.cover-row-bottom { padding: 0 1.125rem 0.75rem; flex-wrap: wrap; }
+		.cover-search { max-width: none; }
+		.cover-year-select select { min-width: 7rem; }
+		.cover-name { right: 1rem; bottom: 3.25rem; font-size: 1.0625rem; }
+		.dynamic-cover-avatar-box { right: 1rem; top: 240px; }
+		.dynamic-cover-avatar { width: 3.75rem; height: 3.75rem; }
+		.dynamic-cover-info { padding: 0.375rem 1rem 0.5rem; }
+		.dynamic-cover-bio { font-size: 0.75rem; margin-right: 4.25rem; }
+	}
+</style>

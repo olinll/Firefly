@@ -10,6 +10,13 @@ export const dynamicConfig: DynamicConfig = {
 	// 动态头像和名称的跳转地址，支持站内路径或完整 URL
 	profileUrl: "/about/",
 
+	// 封面配置（微信朋友圈风格）
+	cover: {
+		enable: true,
+		image: "/assets/images/dynamic-cover.jpg",
+		greeting: "Hello 顾拾柒",
+	},
+
 	// 是否为每条动态启用评论，需要先在 commentConfig.ts 启用评论系统
 	showComment: true,
 
