@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /_astro/
+Disallow: /archive/?tag=
+Disallow: /archive/?category=
+Disallow: /archive/?uncategorized=
+
+Sitemap: https://blog.olinl.com/sitemap-index.xml
