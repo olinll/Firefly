@@ -34,6 +34,7 @@ import {
 	fontsList,
 	mermaidConfig,
 	plantumlConfig,
+	redirectsConfig,
 	siteConfig,
 } from "./src/config";
 import I18nKey from "./src/i18n/i18nKey";
@@ -71,6 +72,9 @@ export default defineConfig({
 
 	base: "/",
 	trailingSlash: "always",
+
+	// 短链接 / 重定向配置
+	redirects: redirectsConfig,
 
 	// 字体配置 - 只加载实际使用的字体，跳过未引用的以加快构建
 	fonts: (() => {

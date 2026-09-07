@@ -59,6 +59,26 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			showOnPostPage: true,
 		},
 		{
+			// 组件类型：GitHub 活跃度热力图
+			type: "githubHeatmap",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: false,
+		},
+		{
+			// 组件类型：今日一言
+			type: "quoteOfTheDay",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: false,
+		},
+		{
 			// 组件类型：音乐播放器
 			type: "music",
 			// 是否启用该组件
@@ -102,6 +122,16 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 
 	// 右侧边栏组件配置列表
 	rightComponents: [
+		{
+			// 组件类型：时间问候卡片
+			type: "timeGreeting",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: false,
+		},
 		{
 			// 组件类型：最新动态组件
 			type: "dynamic",
@@ -164,6 +194,16 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 					showHeatmap: true,
 				},
 			},
+		},
+		{
+			// 组件类型：时间进度组件
+			type: "schedule",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "sticky",
+			// 是否在文章详情页显示
+			showOnPostPage: false,
 		},
 		{
 			// 组件类型：侧边栏目录组件（只在文章详情页显示）
@@ -317,6 +357,22 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 					unknownBuildPlatform: "Unknown CI",
 				},
 			},
+		},
+		{
+			// 组件类型：时间进度组件
+			type: "schedule",
+			// 是否启用该组件
+			enable: true,
+			// 是否在文章详情页显示
+			showOnPostPage: true,
+		},
+		{
+			// 组件类型：今日一言
+			type: "quoteOfTheDay",
+			// 是否启用该组件
+			enable: true,
+			// 是否在文章详情页显示
+			showOnPostPage: true,
 		},
 	],
 };

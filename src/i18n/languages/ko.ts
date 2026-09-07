@@ -337,6 +337,7 @@ export const ko: Translation = {
 	[Key.pageViews]: "조회수",
 	[Key.pageViewsLoading]: "불러오는 중...",
 	[Key.pageViewsError]: "통계를 불러올 수 없습니다",
+	[Key.pageVisitors]: "방문자 수",
 
 	// Pinned
 	[Key.pinned]: "고정됨",

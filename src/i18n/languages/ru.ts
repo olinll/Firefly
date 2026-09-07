@@ -340,6 +340,7 @@ export const ru: Translation = {
 	[Key.pageViews]: "Просмотры",
 	[Key.pageViewsLoading]: "Загрузка...",
 	[Key.pageViewsError]: "Статистика недоступна",
+	[Key.pageVisitors]: "Посетители",
 
 	// Закреплено
 	[Key.pinned]: "Закреплено",

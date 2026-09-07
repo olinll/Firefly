@@ -1,9 +1,20 @@
 ---
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
+import { analyticsConfig } from "@/config";
 import { profileConfig } from "@/config/profileConfig";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
 import { encodeMailto, MAILTO_ONCLICK_SCRIPT } from "@/utils/email-utils";
 import { url } from "@/utils/url-utils";
+
+// 浏览人数/浏览量配置（基于 Umami 公开 share API）
+const umamiCfg = analyticsConfig.umamiAnalytics;
+const showStats = !!umamiCfg?.shareId;
+const shareId = umamiCfg?.shareId || "";
+const shareApiBase =
+	umamiCfg?.shareApiBase ||
+	(umamiCfg?.scriptUrl ? new URL(umamiCfg.scriptUrl).origin : "");
 
 interface Props {
 	class?: string;
@@ -92,5 +103,157 @@ const className = Astro.props.class;
                     }
             })(profileConfig.links[0])}
         </div>
+
+        {showStats && (
+            <div
+                class="grid grid-cols-2 gap-2 mt-2"
+                data-profile-stats
+                data-share-id={shareId}
+                data-share-api-base={shareApiBase}
+                data-label-error={i18n(I18nKey.pageViewsError)}
+            >
+                <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-neutral-100/60 dark:bg-neutral-800/50 text-xs transition min-w-0">
+                    <Icon name="material-symbols:group-outline" class="text-(--primary) text-base shrink-0" />
+                    <span class="font-bold text-neutral-900 dark:text-neutral-100 whitespace-nowrap" data-profile-visitors>—</span>
+                    <span class="text-neutral-500 dark:text-neutral-400 whitespace-nowrap">{i18n(I18nKey.pageVisitors)}</span>
+                </div>
+                <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-neutral-100/60 dark:bg-neutral-800/50 text-xs transition min-w-0">
+                    <Icon name="material-symbols:visibility-outline" class="text-(--primary) text-base shrink-0" />
+                    <span class="font-bold text-neutral-900 dark:text-neutral-100 whitespace-nowrap" data-profile-pageviews>—</span>
+                    <span class="text-neutral-500 dark:text-neutral-400 whitespace-nowrap">{i18n(I18nKey.pageViews)}</span>
+                </div>
+            </div>
+        )}
   </div>
 </div>
+
+<script>
+  // Umami 公开 share API 两步取数：先用 shareId 换 token+websiteId，再带两个自定义头取 stats。
+  const SHARE_CACHE_KEY = "umami-profile-share";
+  const SHARE_CACHE_TTL = 24 * 60 * 60 * 1000;
+  const STATS_CACHE_KEY = "umami-profile-stats";
+  const STATS_CACHE_TTL = 5 * 60 * 1000;
+
+  type ShareResponse = {
+    token: string;
+    websiteId: string;
+  };
+
+  type StatsResponse = {
+    pageviews?: number;
+    visitors?: number;
+  };
+
+  function formatNumber(n: number): string {
+    return n.toLocaleString("en-US");
+  }
+
+  function readCache<T>(key: string, ttl: number, tag: string): T | null {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (
+        parsed &&
+        parsed.tag === tag &&
+        Date.now() - parsed.timestamp < ttl
+      ) {
+        return parsed.value as T;
+      }
+    } catch {}
+    localStorage.removeItem(key);
+    return null;
+  }
+
+  function writeCache(key: string, tag: string, value: unknown) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({ timestamp: Date.now(), tag, value }),
+      );
+    } catch {}
+  }
+
+  async function fetchShareData(
+    apiBase: string,
+    shareId: string,
+  ): Promise<ShareResponse> {
+    const cached = readCache<ShareResponse>(SHARE_CACHE_KEY, SHARE_CACHE_TTL, shareId);
+    if (cached) return cached;
+
+    const resp = await fetch(`${apiBase}/api/share/${shareId}`);
+    if (!resp.ok) throw new Error(`share ${resp.status}`);
+    const data = (await resp.json()) as ShareResponse;
+    writeCache(SHARE_CACHE_KEY, shareId, data);
+    return data;
+  }
+
+  async function fetchStats(
+    apiBase: string,
+    share: ShareResponse,
+  ): Promise<StatsResponse> {
+    const cached = readCache<StatsResponse>(
+      STATS_CACHE_KEY,
+      STATS_CACHE_TTL,
+      share.websiteId,
+    );
+    if (cached) return cached;
+
+    const url = `${apiBase}/api/websites/${share.websiteId}/stats?startAt=0&endAt=${Date.now()}`;
+    const resp = await fetch(url, {
+      headers: {
+        "x-umami-share-token": share.token,
+        "x-umami-share-context": "1",
+      },
+    });
+    if (!resp.ok) throw new Error(`stats ${resp.status}`);
+    const data = (await resp.json()) as StatsResponse;
+    writeCache(STATS_CACHE_KEY, share.websiteId, data);
+    return data;
+  }
+
+  async function fetchProfileStats() {
+    const roots = document.querySelectorAll<HTMLElement>("[data-profile-stats]");
+    if (roots.length === 0) return;
+
+    const first = roots[0];
+    const shareId = first.dataset.shareId;
+    const apiBase = (first.dataset.shareApiBase || "").replace(/\/$/, "");
+    const errorLabel = first.dataset.labelError || "—";
+
+    if (!shareId || !apiBase) return;
+
+    let visitors = 0;
+    let pageviews = 0;
+    let ok = false;
+
+    try {
+      const share = await fetchShareData(apiBase, shareId);
+      const stats = await fetchStats(apiBase, share);
+      visitors = stats.visitors ?? 0;
+      pageviews = stats.pageviews ?? 0;
+      ok = true;
+    } catch {
+      ok = false;
+    }
+
+    roots.forEach((root) => {
+      const v = root.querySelector<HTMLElement>("[data-profile-visitors]");
+      const p = root.querySelector<HTMLElement>("[data-profile-pageviews]");
+      if (ok) {
+        if (v) v.textContent = formatNumber(visitors);
+        if (p) p.textContent = formatNumber(pageviews);
+      } else {
+        if (v) v.textContent = errorLabel;
+        if (p) p.textContent = errorLabel;
+      }
+    });
+  }
+
+  function run() {
+    requestAnimationFrame(() => fetchProfileStats());
+  }
+  run();
+  document.addEventListener("swup:contentReplaced", run);
+  document.addEventListener("astro:page-load", run);
+</script>

@@ -12,6 +12,8 @@ import MusicPlayerView from "@components/features/MusicPlayerView.astro";
 import SakuraEffect from "@components/features/SakuraEffect.astro";
 import WavesEffect from "@components/features/WavesEffect.astro";
 import ConfigCarrier from "@components/layout/ConfigCarrier.astro";
+import CopyMessage from "@components/common/CopyMessage.svelte";
+import WelcomeToast from "@components/widget/WelcomeToast.astro";
 
 import {
 	analyticsConfig,
@@ -565,6 +567,12 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
 
     <!-- GitHub 卡片客户端实时补全（forks/stars） -->
     <GithubCardManager />
+
+    <!-- 复制内容提示组件 -->
+    <CopyMessage client:load />
+
+    <!-- 欢迎提示弹窗 -->
+    <WelcomeToast />
   </body>
 </html>
 

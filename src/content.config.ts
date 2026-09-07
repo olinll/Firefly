@@ -86,12 +86,62 @@ const dynamicCollection: ContentCollection<DynamicData> = defineCollection({
 	}),
 });
 
+type ZiyuanData =
+	| {
+			title: string;
+			content: string;
+			closable: boolean;
+			link?: { enable: boolean; text: string; url: string; external: boolean };
+			quotes?: undefined;
+	  }
+	| {
+			title: string;
+			quotes: { text: string; author: string }[];
+			content?: undefined;
+			closable?: undefined;
+			link?: undefined;
+	  };
+
+const ziyuanCollection: ContentCollection<ZiyuanData> = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
+	schema: z.union([
+		z.object({
+			title: z.string(),
+			content: z.string(),
+			closable: z.boolean().optional().default(true),
+			link: z
+				.object({
+					enable: z.boolean().optional().default(true),
+					text: z.string(),
+					url: z.string(),
+					external: z.boolean().optional().default(false),
+				})
+				.optional(),
+			quotes: z.undefined().optional(),
+		}),
+		z.object({
+			title: z.string(),
+			quotes: z.array(
+				z.object({
+					text: z.string(),
+					author: z.string(),
+				}),
+			),
+			content: z.undefined().optional(),
+			closable: z.undefined().optional(),
+			link: z.undefined().optional(),
+		}),
+	]),
+});
+
 export const collections: {
 	dynamic: typeof dynamicCollection;
 	posts: typeof postsCollection;
 	spec: typeof specCollection;
+	ziyuan: typeof ziyuanCollection;
 } = {
 	dynamic: dynamicCollection,
 	posts: postsCollection,
 	spec: specCollection,
+	ziyuan: ziyuanCollection,
 };

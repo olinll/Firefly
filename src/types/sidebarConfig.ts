@@ -10,7 +10,11 @@ export type WidgetComponentType =
 	| "calendar"
 	| "music"
 	| "siteInfo"
-	| "dynamic";
+	| "githubHeatmap"
+	| "timeGreeting"
+	| "dynamic"
+	| "schedule"
+	| "quoteOfTheDay";
 
 export type WidgetComponentConfig = {
 	type: WidgetComponentType; // 组件类型
