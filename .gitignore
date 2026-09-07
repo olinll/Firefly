@@ -47,3 +47,6 @@ package/
 .codex*
 .claude
 .mimocode
+
+# article migration workspace (local-only source copies)
+待迁移文章/
