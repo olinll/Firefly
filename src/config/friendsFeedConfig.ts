@@ -19,6 +19,7 @@ export const friendsFeedGroups: FriendFeedGroup[] = [
 				date: "2022-01-01",
 				comment: "这是我自己",
 			},
+// 被丢了哈哈哈
 			//{
 				//author: "顾拾柒 & Hako",
 				//title: "17 & Hako",
