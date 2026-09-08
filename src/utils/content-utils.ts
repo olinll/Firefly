@@ -2,6 +2,7 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url-utils";
+import { rssConfig } from "@/config";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -36,6 +37,26 @@ export async function getSortedPosts(): Promise<CollectionEntry<"posts">[]> {
 
 	return sorted;
 }
+
+/**
+ * 获取 RSS 文章：排除配置中的文章，并严格按发布时间倒序排列。
+ * RSS 不受置顶状态影响，避免旧的置顶文章出现在最新文章之前。
+ */
+export async function getRssPosts(): Promise<CollectionEntry<"posts">[]> {
+	const excludedPostIds = new Set<string>(rssConfig.excludedPostIds);
+	const allBlogPosts = await getCollection("posts", ({ data }) => {
+		return import.meta.env.PROD ? data.draft !== true : true;
+	});
+
+	return allBlogPosts
+		.filter((post) => !excludedPostIds.has(post.id))
+		.sort(
+			(a, b) =>
+				b.data.published.getTime() - a.data.published.getTime() ||
+				a.data.title.localeCompare(b.data.title),
+		);
+}
+
 export type PostForList = {
 	id: string;
 	data: CollectionEntry<"posts">["data"];

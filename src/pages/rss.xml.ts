@@ -5,7 +5,7 @@ import rss, { type RSSFeedItem } from "@astrojs/rss";
 import { getContainerRenderer as getSvelteRenderer } from "@astrojs/svelte/container-renderer";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import { getSortedPosts } from "@utils/content-utils";
+import { getRssPosts } from "@utils/content-utils";
 import { formatDateI18nWithTime } from "@utils/date-utils";
 import { url } from "@utils/url-utils";
 import type { APIContext } from "astro";
@@ -25,7 +25,7 @@ function stripInvalidXmlChars(str: string): string {
 }
 
 export async function GET(context: APIContext): Promise<Response> {
-	const blog = await getSortedPosts();
+	const blog = await getRssPosts();
 	const renderers = await loadRenderers([
 		getMDXRenderer(),
 		getSvelteRenderer(),
