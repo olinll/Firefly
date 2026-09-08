@@ -4,7 +4,7 @@ slug: qq-group
 published: 2026-06-24 23:58:21
 updated: 2026-06-24 23:58:21
 description: 一个人走得快，一群人走得远。
-image: api
+image: https://img.olinl.com/file/post-img/qq-group/0001.webp
 category: 杂项
 tags: [博客]
 draft: false
