@@ -19,16 +19,16 @@ export const friendsFeedGroups: FriendFeedGroup[] = [
 				date: "2022-01-01",
 				comment: "这是我自己",
 			},
-// 被丢了哈哈哈
+			// 被丢了哈哈哈
 			//{
-				//author: "顾拾柒 & Hako",
-				//title: "17 & Hako",
-				//desc: "a little corner for the two of us.",
-				//link: "https://hako.love/",
-				//icon: "https://hako.love/icon.svg?icon.3c8wdhom-ig9p.svg",
-				//avatar: "https://hako.love/icon.svg?icon.3c8wdhom-ig9p.svg",
-				//archs: ["Next.js"],
-				//date: "2026-06-10",
+			//author: "顾拾柒 & Hako",
+			//title: "17 & Hako",
+			//desc: "a little corner for the two of us.",
+			//link: "https://hako.love/",
+			//icon: "https://hako.love/icon.svg?icon.3c8wdhom-ig9p.svg",
+			//avatar: "https://hako.love/icon.svg?icon.3c8wdhom-ig9p.svg",
+			//archs: ["Next.js"],
+			//date: "2026-06-10",
 			//},
 			{
 				author: "Olinl Note",
