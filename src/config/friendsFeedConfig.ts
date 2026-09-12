@@ -122,6 +122,18 @@ export const friendsFeedGroups: FriendFeedGroup[] = [
 				archs: ["Cloudflare"],
 				date: "2026-09-01",
 			},
+
+			{
+				author: "UpXuu",
+				title: "UpXuu's blog",
+				desc: "逐光而上",
+				link: "https://upxuu.com/",
+				feed: "https://upxuu.com/rss.xml",
+				icon: "https://upxuu.com/images/me.jpg",
+				avatar: "https://q1.qlogo.cn/g?b=qq&nk=3697773416&s=640",
+				archs: ["Astro", "Vercel"],
+				date: "2026-09-12",
+			},
 		],
 	},
 	{
@@ -284,9 +296,9 @@ export const friendsFeedGroups: FriendFeedGroup[] = [
 				author: "笔尖代码",
 				title: "笔尖代码",
 				desc: "笔尖代码 - 一份汇聚前端、后端、数据库、运维、系统知识的个人技术文档库",
-				link: "https://123456l.com/",
-				icon: "https://123456l.com/assets/images/logo.png",
-				avatar: "https://123456l.com/assets/images/logo.png",
+				link: "https://3z.ink/",
+				icon: "https://3z.ink/assets/images/logo-v2.png",
+				avatar: "https://3z.ink/assets/images/logo-v2.png",
 				archs: ["PHP", "EdgeOne"],
 				date: "2026-07-12",
 			},
@@ -445,6 +457,30 @@ export const friendsFeedGroups: FriendFeedGroup[] = [
 					"https://linlog.top/api/uploads/2026/09/1788411216332767920-dca59196a965c5e8.jpg",
 				archs: ["Cloudflare"],
 				date: "2026-09-03",
+			},
+
+			{
+				author: "Lin",
+				title: "Lin Blog",
+				desc: "记录技术、互联网与日常观察",
+				link: "https://linlog.top",
+				icon: "https://linlog.top/api/uploads/2026/09/1788411216332767920-dca59196a965c5e8.jpg",
+				avatar:
+					"https://linlog.top/api/uploads/2026/09/1788411216332767920-dca59196a965c5e8.jpg",
+				archs: ["Cloudflare"],
+				date: "2026-09-03",
+			},
+
+			{
+				author: "星宇安全实验室",
+				title: "星宇安全实验室",
+				desc: "星宇安全实验室，专注网络安全技术分享，记录团队实战经历、安全研究与编程成长笔记，致力于分享网安学习干货。",
+				link: "https://bk.zhaozhiqiang.pw",
+				icon: "https://bk.zhaozhiqiang.pw/wp-content/uploads/2026/07/1784847314130_148x148.png",
+				avatar:
+					"https://bk.zhaozhiqiang.pw/wp-content/uploads/2026/07/1784847314130_148x148.png",
+				archs: ["zibll", "ESA"],
+				date: "2026-09-10",
 			},
 		],
 	},
